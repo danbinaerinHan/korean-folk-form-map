@@ -51,22 +51,57 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline: 2px s
 .explorer { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
 .map-panel { padding: 12px 12px 6px; }
-.crumbs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: var(--step--1); padding: 2px 4px 8px; }
-.crumbs button { font: inherit; background: none; border: 0; padding: 2px 0; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
-.crumbs span.sep { color: var(--faint); }
-.crumbs .here { color: var(--fg); font-weight: 600; }
+/* level stepper: always visible, one step per level of the hierarchy */
+.stepper {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 2px 10px rgba(29, 35, 41, 0.06);
+}
+.step {
+  font: inherit; text-align: left; background: none; border: 0; color: var(--fg); cursor: pointer; min-width: 0;
+  display: grid; grid-template-columns: 26px minmax(0, 1fr); column-gap: 10px; align-items: center;
+  padding: 10px 14px 10px 12px; position: relative;
+}
+.step + .step { border-left: 1px solid var(--line); }
+.step + .step::before {
+  content: ""; position: absolute; left: -7px; top: 50%; width: 12px; height: 12px; margin-top: -6px;
+  background: var(--surface); border-top: 1px solid var(--line); border-right: 1px solid var(--line); transform: rotate(45deg);
+}
+.step .ico { grid-row: span 2; display: grid; place-items: center; }
+.step .lvl { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.step .val { font-size: var(--step--1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.step.todo .val { color: var(--muted); font-style: italic; }
+.step.active { background: var(--bg); box-shadow: inset 0 -3px 0 var(--accent); }
+.step.active .lvl { color: var(--accent); }
+.step:disabled { cursor: default; }
+.step:not(:disabled):hover .val { text-decoration: underline; text-underline-offset: 2px; }
+.backbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 2px 4px 8px; font-size: var(--step--1); color: var(--muted); }
+.up {
+  font: inherit; font-size: var(--step--1); color: var(--accent); background: none; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px;
+}
+.up:hover { background: var(--bg); }
 svg.map { width: 100%; height: auto; display: block; touch-action: manipulation; }
 svg.map text { font-family: var(--body); fill: var(--fg); }
 svg.map .axis text { fill: var(--muted); font-size: 11px; }
 svg.map .axis line { stroke: var(--line); }
 svg.map .zero { stroke: var(--faint); stroke-dasharray: 3 3; }
 svg.map .pt { cursor: pointer; }
-svg.map .pt:hover circle.mk, svg.map .pt.hl circle.mk { stroke: var(--fg); stroke-width: 2; }
+svg.map .pt:hover .mk, svg.map .pt.hl .mk { stroke: var(--fg); stroke-width: 2.5; }
+svg.map .child { transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+svg.map .fade { transition: opacity 0.35s ease 0.28s; }
+svg.map .lbl.up-lbl { font-style: italic; fill: var(--muted); }
 svg.map .lbl { font-size: 11.5px; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--step--1); color: var(--muted); padding: 6px 4px 4px; align-items: center; }
 .legend svg { vertical-align: middle; }
 .legend .sizes { display: inline-flex; gap: 4px; align-items: center; }
 .legend b { color: var(--fg); font-weight: 600; }
+.legend .key { display: inline-flex; gap: 6px; align-items: center; }
+.path { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: var(--step--1); color: var(--muted); }
+.path button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.sib { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: var(--step--1); color: var(--muted); }
+.sib button { font: inherit; font-size: var(--step--1); background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 4px; padding: 2px 10px; cursor: pointer; }
+.sib button:disabled { color: var(--faint); cursor: default; }
 
 .side { padding: 16px; display: grid; gap: 12px; max-height: 640px; overflow: auto; }
 .side .hint { font-size: var(--step--1); color: var(--muted); }
@@ -118,6 +153,8 @@ footer { font-size: var(--step--1); color: var(--muted); display: grid; gap: 6px
 
 @media (max-width: 860px) {
   .explorer { grid-template-columns: minmax(0, 1fr); }
+  .step { grid-template-columns: minmax(0, 1fr); padding: 8px 8px 8px 12px; }
+  .step .ico { display: none; }
   .side { max-height: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -130,9 +167,11 @@ footer { font-size: var(--step--1); color: var(--muted); display: grid; gap: 6px
     <p class="lede">Phrase organisation and motif repetition in field recordings from the MBC <i>Korean Folk Song Anthology</i> (한국민요대전, recorded 1989–1996). Choose a function category, then a song type, then a recording to hear it with its phrases and repeated motifs.</p>
   </header>
 
-  <section class="explorer" aria-label="Form map explorer">
+  <nav class="stepper" id="stepper" aria-label="Level"></nav>
+
+  <section class="explorer" id="explorer" aria-label="Form map explorer">
     <div class="panel map-panel">
-      <nav class="crumbs" id="crumbs" aria-label="Map level"></nav>
+      <div class="backbar" id="backbar"></div>
       <svg class="map" id="map" viewBox="0 0 640 500" role="img" aria-label="Form map"></svg>
       <div class="legend" id="legend"></div>
     </div>
@@ -169,7 +208,7 @@ let featuredIdx = new Map();
 
 function el(tag, attrs = {}, parent) {
   const e = document.createElementNS(NS, tag);
-  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v);
   if (parent) parent.appendChild(e);
   return e;
 }
@@ -207,8 +246,14 @@ function drawAxes(svg) {
 function clampXY(x, y) {
   return [Math.min(Math.max(x, DOM.x[0]), DOM.x[1]), Math.min(Math.max(y, DOM.y[0]), DOM.y[1])];
 }
+const P = (x, y) => { const [cx, cy] = clampXY(x, y); return [sx(cx), sy(cy)]; };
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const level = () => (!state.cat ? 1 : !state.type ? 2 : 3);
 
-function drawMap() {
+// Visual grammar of the hierarchy:
+//   the level being chosen = solid marks (circle for categories and song types, diamond for recordings);
+//   its parents stay on the map as hollow rings you can click to go back up; spokes join parent to children.
+function drawMap(animate = false) {
   const svg = $("map");
   svg.replaceChildren();
   drawAxes(svg);
@@ -216,57 +261,89 @@ function drawMap() {
   const tIdxCat = M.types.map(t => t.cat);
   const tIdxKey = M.types.map(t => t.key);
   for (const [x, y, ti] of M.dots) {
-    const [cx, cy] = clampXY(x, y);
+    const [px, py] = P(x, y);
     let fill = "var(--dot)", op = 0.22, r = 1.5;
     if (state.type) {
-      if (tIdxKey[ti] === state.type) { fill = catOf(state.cat).color; op = 0.45; r = 2.1; }
-      else op = 0.08;
+      if (tIdxKey[ti] === state.type) { fill = catOf(state.cat).color; op = 0.42; r = 2.1; }
+      else op = 0.07;
     } else if (state.cat) {
-      if (tIdxCat[ti] === state.cat) { fill = catOf(state.cat).color; op = 0.28; r = 1.7; }
-      else op = 0.08;
+      if (tIdxCat[ti] === state.cat) { fill = catOf(state.cat).color; op = 0.26; r = 1.7; }
+      else op = 0.07;
     }
-    el("circle", { cx: sx(cx), cy: sy(cy), r, fill, "fill-opacity": op }, dots);
+    el("circle", { cx: px, cy: py, r, fill, "fill-opacity": op }, dots);
   }
+  const links = el("g", { class: "fade" }, svg);
   const pts = el("g", {}, svg);
-  if (!state.cat) {
-    for (const c of M.categories) addPoint(pts, c.x, c.y, PQ_R[c.pq - 1], c.color, c.name, `cat:${c.key}`, () => go(c.key, null), false, c.pq);
-  } else if (!state.type) {
-    for (const t of M.types.filter(t => t.cat === state.cat))
-      addPoint(pts, t.x, t.y, PQ_R[t.pq - 1], catOf(t.cat).color, t.name, `type:${t.key}`, () => go(state.cat, t.key), false, t.pq);
+  const labels = el("g", { class: "labels fade" }, svg);
+  let origin = null;
+  const spoke = (a, b, color, dash) => {
+    const [x1, y1] = P(a.x, a.y), [x2, y2] = P(b.x, b.y);
+    el("line", { x1, y1, x2, y2, stroke: color, "stroke-width": 1.2, "stroke-opacity": 0.55, "stroke-dasharray": dash }, links);
+  };
+  if (level() === 1) {
+    for (const c of M.categories)
+      addPoint(pts, labels, { x: c.x, y: c.y, r: PQ_R[c.pq - 1], color: c.color, label: c.name, key: `cat:${c.key}`, pq: c.pq,
+        onClick: () => go(c.key, null, true) });
+  } else if (level() === 2) {
+    const c = catOf(state.cat);
+    origin = c;
+    const ts = M.types.filter(t => t.cat === state.cat);
+    ts.forEach(t => spoke(c, t, c.color));
+    addPoint(pts, labels, { x: c.x, y: c.y, r: PQ_R[c.pq - 1] + 4, color: c.color, shape: "ring", key: `up:root`,
+      label: `↑ ${c.name} (category median)`, labelClass: "up-lbl", title: "Back to all categories", onClick: () => go(null, null) });
+    for (const t of ts)
+      addPoint(pts, labels, { x: t.x, y: t.y, r: PQ_R[t.pq - 1], color: c.color, label: t.name, key: `type:${t.key}`, pq: t.pq, child: true,
+        onClick: () => go(state.cat, t.key, true) });
   } else {
-    const t = typeOf(state.type);
-    const g = el("g", {}, pts);
-    const s = 7;
-    el("path", { d: `M${sx(t.x) - s},${sy(t.y)}h${2 * s}M${sx(t.x)},${sy(t.y) - s}v${2 * s}`, stroke: "var(--fg)", "stroke-width": 2 }, g);
-    const lb = el("text", { class: "lbl", x: sx(t.x) + 10, y: sy(t.y) - 8 }, g);
-    lb.textContent = `${t.name} median`;
-    for (const sid of featuredByType.get(state.type) || []) {
-      const f = featuredIdx.get(sid);
-      addPoint(pts, f.x, f.y, 6.5, catOf(state.cat).color, null, `song:${sid}`, () => openSong(sid, true), sid === state.song);
+    const c = catOf(state.cat), t = typeOf(state.type);
+    origin = t;
+    const ids = featuredByType.get(state.type) || [];
+    spoke(c, t, c.color, "3 3");
+    ids.forEach(id => spoke(t, featuredIdx.get(id), c.color));
+    addPoint(pts, labels, { x: c.x, y: c.y, r: PQ_R[c.pq - 1] + 3, color: c.color, shape: "ring", dash: "4 3", key: `up:root`,
+      label: `↑ ${c.name}`, labelClass: "up-lbl", title: "Back to all categories", onClick: () => go(null, null) });
+    addPoint(pts, labels, { x: t.x, y: t.y, r: PQ_R[t.pq - 1] + 3, color: c.color, shape: "ring", key: `up:cat`,
+      label: `↑ ${t.name} (song-type median)`, labelClass: "up-lbl", title: `Back to the song types of ${c.name}`, onClick: () => go(state.cat, null) });
+    for (const id of ids) {
+      const f = featuredIdx.get(id);
+      addPoint(pts, labels, { x: f.x, y: f.y, r: 6.5, color: c.color, shape: "diamond", key: `song:${id}`, child: true,
+        title: `${f.title} · ${f.place}`, selected: id === state.song, onClick: () => openSong(id, true) });
     }
   }
   placeLabels(svg);
+  if (animate && origin && !REDUCED) {
+    const [ox, oy] = P(origin.x, origin.y);
+    const kids = [...pts.querySelectorAll(".child")];
+    kids.forEach(k => { k.style.transition = "none"; k.style.transform = `translate(${ox - k.dataset.px}px, ${oy - k.dataset.py}px)`; });
+    links.style.opacity = 0; labels.style.opacity = 0;
+    svg.getBoundingClientRect();
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      kids.forEach(k => { k.style.transition = ""; k.style.transform = ""; });
+      links.style.opacity = 1; labels.style.opacity = 1;
+    }));
+  }
 }
 
-// Greedy label placement: try right, left, above, below of each point; keep the first spot that
-// overlaps no earlier label or marker. Font grows on narrow screens so labels stay legible.
+// Greedy label placement: try right, left, above, below of each point, then farther spots with a leader line;
+// keep the first spot that overlaps no earlier label or marker. Font grows on narrow screens.
 function placeLabels(svg) {
   const k = Math.min(1.9, Math.max(1, 640 / Math.max(1, svg.clientWidth || 640)));
   const fs = 11.5 * k;
   svg.querySelectorAll(".axis text").forEach(x => { x.style.fontSize = 11 * k + "px"; });
-  const boxes = [...svg.querySelectorAll("circle.mk")].map(c => {
-    const x = +c.getAttribute("cx"), y = +c.getAttribute("cy"), r = +c.getAttribute("r");
+  svg.querySelectorAll("line.lead").forEach(x => x.remove());
+  const boxes = [...svg.querySelectorAll(".pt[data-px]")].map(g => {
+    const x = +g.dataset.px, y = +g.dataset.py, r = +g.dataset.r + 2;
     return [x - r, y - r, x + r, y + r];
   });
   const hit = b => boxes.some(o => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
   const labels = [...svg.querySelectorAll("text.lbl[data-px]")].sort((a, b) => a.dataset.py - b.dataset.py);
   for (const t of labels) {
     t.style.fontSize = fs + "px";
+    t.style.display = "";            // a hidden label measures 0 wide; show it before measuring
     const px = +t.dataset.px, py = +t.dataset.py, r = +t.dataset.r;
     const w = t.getComputedTextLength(), h = fs;
     const cands = [[px + r + 4, py + h * 0.35, "start"], [px - r - 4, py + h * 0.35, "end"],
                    [px, py - r - 4, "middle"], [px, py + r + h, "middle"]];
-    // farther spots, connected by a leader line
     for (const d of [1, 2, 3, 4, 5]) for (const s of [-1, 1]) {
       cands.push([px + r + 10, py + h * 0.35 + s * d * h * 1.1, "start", true]);
       cands.push([px - r - 10, py + h * 0.35 + s * d * h * 1.1, "end", true]);
@@ -274,14 +351,14 @@ function placeLabels(svg) {
     let chosen = null;
     for (const [x, y, a, lead] of cands) {
       const x0 = a === "start" ? x : a === "end" ? x - w : x - w / 2;
-      const b = [x0 - 1, y - h * 0.85, x0 + w + 1, y + h * 0.25];
-      if (b[0] < X0 || b[2] > X1 || b[1] < Y0) continue;
-      if (b[3] > Y1) continue;
+      const b = [x0 - 2, y - h * 0.95, x0 + w + 2, y + h * 0.35];   // glyph box with descenders and a little air
+      if (b[0] < X0 || b[2] > X1 || b[1] < Y0 || b[3] > Y1) continue;
       if (!hit(b)) { chosen = [x, y, a, b, lead]; break; }
     }
-    if (!chosen) { const [x, y, a] = cands[0]; chosen = [x, y, a, [x, y - h, x + w, y], false]; }
+    // no free spot (dense map on a narrow screen): hide the label; the list beside the map and the tooltip still name the point
+    t.style.display = chosen ? "" : "none";
+    if (!chosen) continue;
     t.setAttribute("x", chosen[0]); t.setAttribute("y", chosen[1]); t.setAttribute("text-anchor", chosen[2]);
-    t.parentNode.querySelector("line.lead")?.remove();
     if (chosen[4]) {
       const lx = chosen[2] === "start" ? chosen[0] - 2 : chosen[0] + 2;
       t.parentNode.insertBefore(el("line", { class: "lead", x1: px, y1: py, x2: lx, y2: chosen[1] - h * 0.35,
@@ -291,65 +368,109 @@ function placeLabels(svg) {
   }
 }
 
-function addPoint(parent, x, y, r, color, label, key, onClick, selected = false, pq = null) {
-  const [cx, cy] = clampXY(x, y);
-  const g = el("g", { class: "pt", tabindex: 0, role: "button", "data-key": key, "aria-label": label || key }, parent);
-  el("title", {}, g).textContent = (label || key) + (pq ? ` · periodicity quartile ${pq} of 4` : "");
-  if (selected) el("circle", { cx: sx(cx), cy: sy(cy), r: r + 4, fill: "none", stroke: "var(--fg)", "stroke-width": 2 }, g);
-  el("circle", { class: "mk", cx: sx(cx), cy: sy(cy), r, fill: color, stroke: "var(--surface)", "stroke-width": 1.5 }, g);
-  if (label) {
-    const t = el("text", { class: "lbl", "data-px": sx(cx), "data-py": sy(cy), "data-r": r }, g);
-    t.textContent = label;
+function addPoint(layer, labels, o) {
+  const [px, py] = P(o.x, o.y);
+  const g = el("g", { class: "pt" + (o.child ? " child" : ""), tabindex: 0, role: "button", "data-key": o.key,
+    "aria-label": o.title || o.label || o.key, "data-px": px, "data-py": py, "data-r": o.r }, layer);
+  el("title", {}, g).textContent = o.title || (o.label + (o.pq ? ` · periodicity quartile ${o.pq} of 4` : ""));
+  if (o.selected) el("circle", { cx: px, cy: py, r: o.r + 5, fill: "none", stroke: "var(--fg)", "stroke-width": 2 }, g);
+  if (o.shape === "diamond") {
+    const r = o.r * 1.3;
+    el("path", { class: "mk", d: `M${px},${py - r}L${px + r},${py}L${px},${py + r}L${px - r},${py}Z`, fill: o.color, stroke: "var(--fg)", "stroke-width": 1 }, g);
+  } else if (o.shape === "ring") {
+    el("circle", { class: "mk", cx: px, cy: py, r: o.r, fill: "var(--surface)", "fill-opacity": 0.6, stroke: o.color, "stroke-width": 2.5, "stroke-dasharray": o.dash }, g);
+  } else {
+    el("circle", { class: "mk", cx: px, cy: py, r: o.r, fill: o.color, stroke: "var(--surface)", "stroke-width": 1.5 }, g);
   }
-  g.addEventListener("click", onClick);
-  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } });
-  g.addEventListener("mouseenter", () => hl(key, true));
-  g.addEventListener("mouseleave", () => hl(key, false));
+  if (o.label) el("text", { class: "lbl" + (o.labelClass ? " " + o.labelClass : ""), "data-px": px, "data-py": py, "data-r": o.r }, labels).textContent = o.label;
+  g.addEventListener("click", o.onClick);
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); o.onClick(); } });
+  g.addEventListener("mouseenter", () => hl(o.key, true));
+  g.addEventListener("mouseleave", () => hl(o.key, false));
 }
 
 function hl(key, on) {
   document.querySelectorAll(`[data-key="${CSS.escape(key)}"]`).forEach(n => n.classList.toggle("hl", on));
 }
 
-function drawLegend() {
-  const L = $("legend");
-  const sizes = PQ_R.map(r => `<svg width="${2 * r + 2}" height="${2 * r + 2}" aria-hidden="true"><circle cx="${r + 1}" cy="${r + 1}" r="${r}" fill="var(--dot)"/></svg>`).join("");
-  L.innerHTML = state.type
-    ? `<span>Small dots: every recording of this song type. Large dots: recordings you can open. Cross: song-type median.</span>`
-    : `<span class="sizes">${sizes}</span><span><b>Point size = periodicity</b> (quartile, low → high). It does not show the number of recordings; those are in the list.</span>`;
+// small inline icons shared by the stepper and the legend
+function icon(kind, color = "var(--dot)", r = 6) {
+  const s = 2 * r + 4, c = s / 2;
+  const shape = kind === "diamond" ? `<path d="M${c},${c - r * 1.2}L${c + r * 1.2},${c}L${c},${c + r * 1.2}L${c - r * 1.2},${c}Z" fill="${color}" stroke="var(--fg)" stroke-width="1"/>`
+    : kind === "ring" ? `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${color}" stroke-width="2.2"/>`
+    : `<circle cx="${c}" cy="${c}" r="${r}" fill="${color}"/>`;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" aria-hidden="true">${shape}</svg>`;
 }
 
-function drawCrumbs() {
-  const C = $("crumbs");
-  const parts = [];
-  parts.push(state.cat ? `<button data-go="root">All categories</button>` : `<span class="here">All categories</span>`);
-  if (state.cat) {
-    parts.push(`<span class="sep">/</span>`);
-    parts.push(state.type ? `<button data-go="cat">${esc(catOf(state.cat).name)}</button>` : `<span class="here">${esc(catOf(state.cat).name)}</span>`);
-  }
-  if (state.type) parts.push(`<span class="sep">/</span><span class="here">${esc(typeOf(state.type).name)}</span>`);
-  C.innerHTML = parts.join(" ");
-  C.querySelectorAll("button").forEach(b => b.addEventListener("click", () => b.dataset.go === "root" ? go(null, null) : go(state.cat, null)));
+function drawLegend() {
+  const L = $("legend");
+  const sizes = PQ_R.map(r => icon("circle", "var(--dot)", r)).join("");
+  const sizeNote = `<span class="key"><span class="sizes">${sizes}</span><span><b>Point size = periodicity</b> (quartile, low → high), not the number of recordings.</span></span>`;
+  if (level() === 1) L.innerHTML = sizeNote;
+  else if (level() === 2) L.innerHTML = `<span class="key">${icon("ring", catOf(state.cat).color)}<span>Category median: click to go back up</span></span>` +
+    `<span class="key">${icon("circle", catOf(state.cat).color)}<span>Song-type medians</span></span>` + sizeNote;
+  else L.innerHTML = `<span class="key">${icon("ring", catOf(state.cat).color)}<span>Song-type and category medians: click to go back up</span></span>` +
+    `<span class="key">${icon("diamond", catOf(state.cat).color)}<span>Recordings you can open</span></span>` +
+    `<span class="key"><svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="2.2" fill="${catOf(state.cat).color}" fill-opacity=".5"/></svg><span>Every recording of this song type</span></span>`;
+}
+
+function drawStepper() {
+  const lv = level();
+  const c = state.cat && catOf(state.cat), t = state.type && typeOf(state.type);
+  const songHere = state.song && state.type && (featuredByType.get(state.type) || []).includes(state.song) ? featuredIdx.get(state.song) : null;
+  const col = c ? c.color : "var(--dot)";
+  const steps = [
+    { n: 1, name: "Function category", ico: icon("circle", col, 7), val: c ? c.name : "Choose on the map", done: !!c, go: () => go(null, null), enabled: lv > 1 },
+    { n: 2, name: "Song type", ico: icon("circle", col, 5), val: t ? `${t.name} · ${t.key}` : (c ? "Choose on the map" : "–"), done: !!t, go: () => go(state.cat, null), enabled: !!c },
+    { n: 3, name: "Recording", ico: icon("diamond", col, 4.5), val: songHere ? `${songHere.title} · ${songHere.place}` : (t ? "Choose on the map" : "–"), done: !!songHere,
+      go: () => $("song").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }), enabled: !!songHere },
+  ];
+  const S = $("stepper");
+  S.innerHTML = steps.map(s => `<button type="button" class="step ${s.n === lv ? "active" : ""} ${s.done ? "done" : "todo"}" data-n="${s.n}" ${s.enabled ? "" : "disabled"}` +
+    ` title="${s.enabled ? (s.n === 3 ? "Show this recording" : `Go to the ${s.name.toLowerCase()} level`) : ""}">` +
+    `<span class="ico">${s.ico}</span><span class="lvl">${s.n} · ${s.name}</span><span class="val">${esc(s.val)}</span></button>`).join("");
+  S.querySelectorAll(".step").forEach(b => b.addEventListener("click", () => {
+    const s = steps[+b.dataset.n - 1];
+    if (!s.enabled) return;
+    s.go();
+    if (s.n < 3) scrollToMap();
+  }));
+}
+
+function scrollToMap() {
+  const r = $("explorer").getBoundingClientRect();
+  if (r.top < 0 || r.top > window.innerHeight * 0.6) $("explorer").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+}
+
+function drawBackbar() {
+  const B = $("backbar");
+  const lv = level();
+  if (lv === 1) { B.innerHTML = `<span>Showing all ten function categories. Choose one to open its song types.</span>`; return; }
+  const c = catOf(state.cat);
+  B.innerHTML = lv === 2
+    ? `<button type="button" class="up" data-up="1">↑ All categories</button><span>Showing the song types of ${esc(c.name)}.</span>`
+    : `<button type="button" class="up" data-up="2">↑ ${esc(c.name)}: all song types</button><span>Showing recordings of ${esc(typeOf(state.type).name)}.</span>`;
+  B.querySelector("button").addEventListener("click", e => e.currentTarget.dataset.up === "1" ? go(null, null) : go(state.cat, null));
 }
 
 function drawSide() {
   const S = $("side");
   let html = "";
-  if (!state.cat) {
-    html = `<h3>Function categories</h3><p class="hint">Ten categories, each the median of its recordings. Numbers are recordings. Choose a category to see its song types.</p><ul class="items">` +
+  if (level() === 1) {
+    html = `<h3>${icon("circle", "var(--dot)", 5)} Function categories</h3><p class="hint">Ten categories, each the median of its recordings. Numbers are recordings. Choose a category to see its song types.</p><ul class="items">` +
       M.categories.map(c => item(`cat:${c.key}`, c.color, c.name, null, c.n.toLocaleString())).join("") + `</ul>`;
-  } else if (!state.type) {
+  } else if (level() === 2) {
     const c = catOf(state.cat);
     const ts = M.types.filter(t => t.cat === state.cat);
-    html = `<h3>${esc(c.name)}: song types</h3><p class="hint">Song types are the editors' names for the use of a song, so one type can contain different melodies. Choose a type to see its recordings.</p><ul class="items">` +
+    html = `<h3>${icon("circle", c.color, 4)} ${esc(c.name)}: song types</h3><p class="hint">Song types are the editors' names for the use of a song, so one type can contain different melodies. Choose a type to see its recordings.</p><ul class="items">` +
       ts.map(t => item(`type:${t.key}`, c.color, t.name, t.key, t.n.toLocaleString())).join("") + `</ul>`;
   } else {
     const t = typeOf(state.type), c = catOf(state.cat);
     const ids = featuredByType.get(state.type) || [];
-    html = `<h3>${esc(t.name)} · ${esc(t.key)}</h3><p class="hint">${t.n.toLocaleString()} recordings in the map. Open one of the highlighted recordings below or on the map.</p><ul class="items">` +
+    html = `<h3>${icon("diamond", c.color, 4)} ${esc(t.name)} · ${esc(t.key)}</h3><p class="hint">${t.n.toLocaleString()} recordings of this song type are on the map; ${ids.length} can be opened. Recordings are ordered by phrase index.</p><ul class="items">` +
       ids.map(id => {
         const f = featuredIdx.get(id);
-        return item(`song:${id}`, c.color, f.title, `${f.place} · phrase index ${fmt(f.x)}`, "", id === state.song);
+        return item(`song:${id}`, c.color, f.title, `${f.place} · phrase index ${fmt(f.x)}`, "", id === state.song, "diamond");
       }).join("") + `</ul>`;
   }
   S.innerHTML = html;
@@ -359,22 +480,23 @@ function drawSide() {
     b.addEventListener("mouseleave", () => hl(k, false));
     b.addEventListener("click", () => {
       const [kind, v] = [k.slice(0, k.indexOf(":")), k.slice(k.indexOf(":") + 1)];
-      if (kind === "cat") go(v, null);
-      else if (kind === "type") go(state.cat, v);
+      if (kind === "cat") go(v, null, true);
+      else if (kind === "type") go(state.cat, v, true);
       else openSong(v, true);
     });
   });
 }
 
-function item(key, color, name, sub, n, current = false) {
-  return `<li><button data-key="${esc(key)}"${current ? ' aria-current="true"' : ""}><span class="sw" style="background:${color}"></span>` +
+function item(key, color, name, sub, n, current = false, shape = "circle") {
+  const sw = shape === "diamond" ? `<span class="sw" style="background:${color};border-radius:1px;transform:rotate(45deg) scale(.8)"></span>` : `<span class="sw" style="background:${color}"></span>`;
+  return `<li><button data-key="${esc(key)}"${current ? ' aria-current="true"' : ""}>${sw}` +
     `<span class="nm">${esc(name)}${sub ? `<small>${esc(sub)}</small>` : ""}</span>` +
     `<span class="n num">${esc(n)}</span></button></li>`;
 }
 
-function go(cat, type) {
+function go(cat, type, animate = false) {
   state.cat = cat; state.type = type;
-  drawMap(); drawLegend(); drawCrumbs(); drawSide();
+  drawMap(animate); drawLegend(); drawStepper(); drawBackbar(); drawSide();
   writeHash();
 }
 
@@ -419,6 +541,7 @@ async function openSong(id, scroll) {
   state.song = id;
   writeHash();
   if (state.type) { drawMap(); drawSide(); }
+  drawStepper();
   let s;
   try { s = await loadSong(id); }
   catch (e) { $("song").innerHTML = `<p class="status err">Could not load data for ${esc(id)} (${esc(e.message)}).</p>`; return; }
@@ -443,7 +566,14 @@ function renderSong(s) {
   const c = catOf(s.cat), t = typeOf(s.type);
   const m = s.metrics;
   const badges = [s.fig706 ? `<span class="chip">Example in the article</span>` : "", s.annotated ? `<span class="chip">Boundaries also annotated by hand</span>` : ""].join("");
+  const sibs = featuredByType.get(s.type) || [];
+  const k = sibs.indexOf(s.id);
   $("song").innerHTML = `
+    <div class="path"><span>${icon("circle", c.color, 5)}</span><button type="button" data-path="cat">${esc(c.name)}</button><span>›</span>
+      <span>${icon("circle", c.color, 3.5)}</span><button type="button" data-path="type">${esc(t.name)}</button><span>›</span>
+      <span>${icon("diamond", c.color, 3.5)}</span><span>this recording</span></div>
+    <div class="sib"><span>Recording ${k + 1} of ${sibs.length} you can open in this song type</span>
+      <button type="button" id="sibprev" ${k > 0 ? "" : "disabled"}>◀ Previous</button><button type="button" id="sibnext" ${k < sibs.length - 1 ? "" : "disabled"}>Next ▶</button></div>
     <div class="song-head">
       <div class="chips"><span class="chip cat" style="background:${c.color}">${esc(c.name)}</span><span class="chip">${esc(t.name)}</span>${badges}</div>
       <div class="kr">${esc(s.title)}</div>
@@ -487,6 +617,13 @@ function renderSong(s) {
     </div>
     ${s.lyrics_published ? `<details><summary>Published lyrics and notes (MBC archive)</summary><pre>${esc(s.lyrics_published)}</pre></details>` : ""}
   `;
+  document.querySelectorAll("#song [data-path]").forEach(b => b.addEventListener("click", () => {
+    if (b.dataset.path === "cat") go(s.cat, null, true); else go(s.cat, s.type, true);
+    scrollToMap();
+  }));
+  const sib = d => { const id = sibs[k + d]; if (!id) return; if (state.type !== s.type) go(s.cat, s.type); openSong(id, false); };
+  $("sibprev").addEventListener("click", () => sib(-1));
+  $("sibnext").addEventListener("click", () => sib(1));
   $("play").addEventListener("click", () => {
     if (audio.paused) {
       $("astatus").textContent = "Loading audio…";
