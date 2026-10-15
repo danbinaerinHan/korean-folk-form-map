@@ -35,6 +35,7 @@ body {
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 0 48px;
+  word-break: keep-all; overflow-wrap: anywhere;   /* Korean: break between words, not inside them */
 }
 .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 28px; }
 header.top { padding-block: 36px 4px; display: grid; gap: 10px; }
@@ -42,7 +43,7 @@ h1 { font: 700 var(--step-3)/1.15 var(--display); margin: 0; text-wrap: balance;
 h2 { font: 700 var(--step-2)/1.2 var(--display); margin: 0; text-wrap: balance; }
 h3 { font: 600 var(--step--1)/1.3 var(--body); margin: 0; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 p { margin: 0; max-width: 68ch; }
-.lede { color: var(--muted); }
+.lede { color: var(--muted); font-size: var(--step-1); max-width: none; }
 a { color: var(--accent); }
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -149,7 +150,9 @@ ul.items .n { color: var(--muted); font-size: var(--step--1); }
 details { font-size: var(--step--1); }
 details summary { cursor: pointer; color: var(--accent); }
 details pre { white-space: pre-wrap; font: 400 var(--step--1)/1.6 var(--body); background: var(--bg); padding: 12px; border-radius: 4px; max-height: 320px; overflow: auto; }
-footer { font-size: var(--step--1); color: var(--muted); display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 16px; }
+footer { font-size: var(--step--1); color: var(--muted); display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px 28px; border-top: 1px solid var(--line); padding-top: 16px; }
+footer section { display: grid; gap: 6px; align-content: start; min-width: 0; }
+footer p { max-width: none; }
 
 @media (max-width: 860px) {
   .explorer { grid-template-columns: minmax(0, 1fr); }
@@ -181,9 +184,9 @@ footer { font-size: var(--step--1); color: var(--muted); display: grid; gap: 6px
   <section class="panel song" id="song" aria-label="Recording viewer"></section>
 
   <footer>
-    <p>Each point on the map is a median over recordings. Phrase index: higher means shorter, more even phrases (mean phrase duration and duration entropy). Return index: Motif Spread and periodic coverage. Point size: quartile of the periodicity index (texture periodicity AC and phase alignment FOLD). Grey dots are all <span class="num" id="nsongs">7,357</span> recordings behind the map. Highlighted recordings are the three with the most reliable automatic phrase segmentation in each third of their song type's phrase-index range.</p>
-    <p>Phrase boundaries and per-phrase lyrics are automatic (fine-tuned Whisper) and uncorrected. Motif letters come from clustering phrase pitch contours; A is the largest motif in the recording, and grey phrases do not recur.</p>
-    <p>Audio of the highlighted recordings is the MBC archive's own files from <a href="https://urisori.co.kr/" target="_blank" rel="noopener">urisori.co.kr</a>, shared for research and education with the archive's credit line. Each recording links to its page there. 자료출처: MBC 한국민요대전.</p>
+    <section><h3>Reading the map</h3><p>Each point on the map is a median over recordings. Phrase index: higher means shorter, more even phrases (mean phrase duration and duration entropy). Return index: Motif Spread and periodic coverage. Point size: quartile of the periodicity index (texture periodicity AC and phase alignment FOLD). Grey dots are all <span id="nsongs">7,357</span> recordings behind the map. Highlighted recordings are the three with the most reliable automatic phrase segmentation in each third of their song type's phrase-index range.</p></section>
+    <section><h3>Phrases and motifs</h3><p>Phrase boundaries and per-phrase lyrics are automatic (fine-tuned Whisper) and uncorrected. Motif letters come from clustering phrase pitch contours; A is the largest motif in the recording, and grey phrases do not recur.</p></section>
+    <section><h3>Audio and credit</h3><p>Audio of the highlighted recordings is the MBC archive's own files from <a href="https://urisori.co.kr/" target="_blank" rel="noopener">urisori.co.kr</a>, shared for research and education with the archive's credit line. Each recording links to its page there. 자료출처: MBC 한국민요대전.</p></section>
   </footer>
 </div>
 
