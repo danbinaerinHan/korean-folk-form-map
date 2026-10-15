@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Korean Folk Song Form Map</title>
+<meta name="description" content="Explore phrase organisation and motif repetition across function categories, song types and individual recordings of the MBC Korean Folk Song Anthology.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: map + drill-down list side by side, song viewer as a full-width score strip below. */
+:root {
+  --bg: #f6f7f8;
+  --surface: #ffffff;
+  --fg: #1d2329;
+  --muted: #5d6873;
+  --faint: #c9d0d6;
+  --line: #e1e5e9;
+  --accent: #2c4c6e;
+  --dot: #8b96a1;
+  --singleton: #e5e7eb;
+  --singleton-txt: #6b7280;
+  --f0: #1d2329;
+  --display: "Gowun Batang", "Noto Serif KR", Georgia, serif;
+  --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step--1: 0.8125rem; --step-0: 0.9375rem; --step-1: 1.125rem; --step-2: 1.5rem; --step-3: 2.125rem;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--fg); font: 400 var(--step-0)/1.55 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 28px; }
+header.top { padding-block: 36px 4px; display: grid; gap: 10px; }
+h1 { font: 700 var(--step-3)/1.15 var(--display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font: 700 var(--step-2)/1.2 var(--display); margin: 0; text-wrap: balance; }
+h3 { font: 600 var(--step--1)/1.3 var(--body); margin: 0; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+p { margin: 0; max-width: 68ch; }
+.lede { color: var(--muted); }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* explorer */
+.explorer { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.map-panel { padding: 12px 12px 6px; }
+.crumbs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: var(--step--1); padding: 2px 4px 8px; }
+.crumbs button { font: inherit; background: none; border: 0; padding: 2px 0; color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.crumbs span.sep { color: var(--faint); }
+.crumbs .here { color: var(--fg); font-weight: 600; }
+svg.map { width: 100%; height: auto; display: block; touch-action: manipulation; }
+svg.map text { font-family: var(--body); fill: var(--fg); }
+svg.map .axis text { fill: var(--muted); font-size: 11px; }
+svg.map .axis line { stroke: var(--line); }
+svg.map .zero { stroke: var(--faint); stroke-dasharray: 3 3; }
+svg.map .pt { cursor: pointer; }
+svg.map .pt:hover circle.mk, svg.map .pt.hl circle.mk { stroke: var(--fg); stroke-width: 2; }
+svg.map .lbl { font-size: 11.5px; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--step--1); color: var(--muted); padding: 6px 4px 4px; align-items: center; }
+.legend svg { vertical-align: middle; }
+.legend .sizes { display: inline-flex; gap: 4px; align-items: center; }
+.legend b { color: var(--fg); font-weight: 600; }
+
+.side { padding: 16px; display: grid; gap: 12px; max-height: 640px; overflow: auto; }
+.side .hint { font-size: var(--step--1); color: var(--muted); }
+ul.items { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+ul.items button {
+  width: 100%; display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  font: inherit; text-align: left; color: var(--fg); background: none; border: 0; border-radius: 4px; padding: 7px 8px; cursor: pointer;
+}
+ul.items button:hover, ul.items button.hl { background: var(--bg); }
+ul.items button[aria-current="true"] { background: var(--bg); box-shadow: inset 2px 0 0 var(--accent); }
+ul.items .sw { width: 12px; height: 12px; border-radius: 50%; }
+ul.items .nm { min-width: 0; }
+ul.items .nm small { display: block; color: var(--muted); font-size: var(--step--1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ul.items .n { color: var(--muted); font-size: var(--step--1); }
+
+/* song viewer */
+.song { padding: 20px; display: grid; gap: 18px; }
+.song-head { display: grid; gap: 6px; }
+.song-head .kr { font: 700 var(--step-2)/1.2 var(--display); }
+.song-head .en { color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: var(--step--1); padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.chip.cat { color: #fff; border-color: transparent; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 20px; font-size: var(--step--1); }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.play { font: 600 var(--step-0) var(--body); background: var(--accent); color: var(--surface); border: 0; border-radius: 4px; padding: 8px 16px; cursor: pointer; min-width: 92px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.seg button { font: inherit; font-size: var(--step--1); background: var(--surface); color: var(--fg); border: 0; padding: 6px 11px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--surface); }
+.status { font-size: var(--step--1); color: var(--muted); }
+.status.err { color: #b4232c; }
+.tracks { display: grid; gap: 6px; }
+.tracks canvas { width: 100%; display: block; cursor: pointer; }
+.trackcap { display: flex; justify-content: space-between; gap: 12px; font-size: var(--step--1); color: var(--muted); flex-wrap: wrap; }
+.pager { display: inline-flex; gap: 6px; }
+.pager button { font: inherit; font-size: var(--step--1); background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 4px; padding: 2px 10px; cursor: pointer; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
+.metrics table { width: 100%; border-collapse: collapse; font-size: var(--step--1); }
+.metrics td { padding: 5px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.metrics td:last-child { text-align: right; white-space: nowrap; padding-left: 12px; }
+.metrics .sub { color: var(--muted); }
+details { font-size: var(--step--1); }
+details summary { cursor: pointer; color: var(--accent); }
+details pre { white-space: pre-wrap; font: 400 var(--step--1)/1.6 var(--body); background: var(--bg); padding: 12px; border-radius: 4px; max-height: 320px; overflow: auto; }
+footer { font-size: var(--step--1); color: var(--muted); display: grid; gap: 6px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 860px) {
+  .explorer { grid-template-columns: minmax(0, 1fr); }
+  .side { max-height: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Korean Folk Song Form Map</h1>
+    <p class="lede">Phrase organisation and motif repetition in field recordings from the MBC <i>Korean Folk Song Anthology</i> (한국민요대전, recorded 1989–1996). Choose a function category, then a song type, then a recording to hear it with its phrases and repeated motifs.</p>
+  </header>
+
+  <section class="explorer" aria-label="Form map explorer">
+    <div class="panel map-panel">
+      <nav class="crumbs" id="crumbs" aria-label="Map level"></nav>
+      <svg class="map" id="map" viewBox="0 0 640 500" role="img" aria-label="Form map"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+    <aside class="panel side" id="side" aria-live="polite"></aside>
+  </section>
+
+  <section class="panel song" id="song" aria-label="Recording viewer"></section>
+
+  <footer>
+    <p>Each point on the map is a median over recordings. Phrase index: higher means shorter, more even phrases (mean phrase duration and duration entropy). Return index: Motif Spread and periodic coverage. Point size: quartile of the periodicity index (texture periodicity AC and phase alignment FOLD). Grey dots are all <span class="num" id="nsongs">7,357</span> recordings behind the map. Highlighted recordings are the three with the most reliable automatic phrase segmentation in each third of their song type's phrase-index range.</p>
+    <p>Phrase boundaries and per-phrase lyrics are automatic (fine-tuned Whisper) and uncorrected. Motif letters come from clustering phrase pitch contours; A is the largest motif in the recording, and grey phrases do not recur.</p>
+    <p>Audio of the highlighted recordings is the MBC archive's own files from <a href="https://urisori.co.kr/" target="_blank" rel="noopener">urisori.co.kr</a>, shared for research and education with the archive's credit line. Each recording links to its page there. 자료출처: MBC 한국민요대전.</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const GRADES = [["strict", "Strict"], ["medium", "Medium"], ["family", "Family"]];
+const PQ_R = [5.5, 7.5, 9.5, 11.5];   // point radius by periodicity quartile (as in the article's Figure 7-05)
+const X0 = 54, X1 = 628, Y0 = 14, Y1 = 452;
+const DOM = { x: [-2.0, 2.8], y: [-3.2, 1.7] };
+const sx = v => X0 + (v - DOM.x[0]) / (DOM.x[1] - DOM.x[0]) * (X1 - X0);
+const sy = v => Y1 - (v - DOM.y[0]) / (DOM.y[1] - DOM.y[0]) * (Y1 - Y0);
+const NS = "http://www.w3.org/2000/svg";
+const $ = id => document.getElementById(id);
+const fmt = (v, d = 2) => (v == null ? "–" : Number(v).toFixed(d));
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+let M = null;            // map.json
+const state = { cat: null, type: null, song: null, grade: "medium" };
+const songCache = new Map();
+let featuredByType = new Map();
+let featuredIdx = new Map();
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+async function getJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+  return r.json();
+}
+
+// ---------------- map ----------------
+function catOf(key) { return M.categories.find(c => c.key === key); }
+function typeOf(key) { return M.types.find(t => t.key === key); }
+
+function drawAxes(svg) {
+  const g = el("g", { class: "axis" }, svg);
+  for (let x = -2; x <= 2.8; x += 1) {
+    el("line", { x1: sx(x), x2: sx(x), y1: Y1, y2: Y1 + 4 }, g);
+    el("text", { x: sx(x), y: Y1 + 16, "text-anchor": "middle" }, g).textContent = x;
+  }
+  for (let y = -3; y <= 1.7; y += 1) {
+    el("line", { x1: X0 - 4, x2: X0, y1: sy(y), y2: sy(y) }, g);
+    el("text", { x: X0 - 8, y: sy(y) + 4, "text-anchor": "end" }, g).textContent = y;
+  }
+  el("line", { class: "zero", x1: sx(0), x2: sx(0), y1: Y0, y2: Y1 }, svg);
+  el("line", { class: "zero", x1: X0, x2: X1, y1: sy(0), y2: sy(0) }, svg);
+  el("rect", { x: X0, y: Y0, width: X1 - X0, height: Y1 - Y0, fill: "none", stroke: "var(--line)" }, svg);
+  el("text", { x: (X0 + X1) / 2, y: Y1 + 38, "text-anchor": "middle", fill: "var(--muted)", "font-size": 12 }, g)
+    .textContent = "Phrase index  →  shorter, more even phrases";
+  const t = el("text", { x: 14, y: (Y0 + Y1) / 2, "text-anchor": "middle", fill: "var(--muted)", "font-size": 12,
+    transform: `rotate(-90 14 ${(Y0 + Y1) / 2})` }, g);
+  t.textContent = "Return index  →  more phrases recur";
+}
+
+function clampXY(x, y) {
+  return [Math.min(Math.max(x, DOM.x[0]), DOM.x[1]), Math.min(Math.max(y, DOM.y[0]), DOM.y[1])];
+}
+
+function drawMap() {
+  const svg = $("map");
+  svg.replaceChildren();
+  drawAxes(svg);
+  const dots = el("g", {}, svg);
+  const tIdxCat = M.types.map(t => t.cat);
+  const tIdxKey = M.types.map(t => t.key);
+  for (const [x, y, ti] of M.dots) {
+    const [cx, cy] = clampXY(x, y);
+    let fill = "var(--dot)", op = 0.22, r = 1.5;
+    if (state.type) {
+      if (tIdxKey[ti] === state.type) { fill = catOf(state.cat).color; op = 0.45; r = 2.1; }
+      else op = 0.08;
+    } else if (state.cat) {
+      if (tIdxCat[ti] === state.cat) { fill = catOf(state.cat).color; op = 0.28; r = 1.7; }
+      else op = 0.08;
+    }
+    el("circle", { cx: sx(cx), cy: sy(cy), r, fill, "fill-opacity": op }, dots);
+  }
+  const pts = el("g", {}, svg);
+  if (!state.cat) {
+    for (const c of M.categories) addPoint(pts, c.x, c.y, PQ_R[c.pq - 1], c.color, c.name, `cat:${c.key}`, () => go(c.key, null), false, c.pq);
+  } else if (!state.type) {
+    for (const t of M.types.filter(t => t.cat === state.cat))
+      addPoint(pts, t.x, t.y, PQ_R[t.pq - 1], catOf(t.cat).color, t.name, `type:${t.key}`, () => go(state.cat, t.key), false, t.pq);
+  } else {
+    const t = typeOf(state.type);
+    const g = el("g", {}, pts);
+    const s = 7;
+    el("path", { d: `M${sx(t.x) - s},${sy(t.y)}h${2 * s}M${sx(t.x)},${sy(t.y) - s}v${2 * s}`, stroke: "var(--fg)", "stroke-width": 2 }, g);
+    const lb = el("text", { class: "lbl", x: sx(t.x) + 10, y: sy(t.y) - 8 }, g);
+    lb.textContent = `${t.name} median`;
+    for (const sid of featuredByType.get(state.type) || []) {
+      const f = featuredIdx.get(sid);
+      addPoint(pts, f.x, f.y, 6.5, catOf(state.cat).color, null, `song:${sid}`, () => openSong(sid, true), sid === state.song);
+    }
+  }
+  placeLabels(svg);
+}
+
+// Greedy label placement: try right, left, above, below of each point; keep the first spot that
+// overlaps no earlier label or marker. Font grows on narrow screens so labels stay legible.
+function placeLabels(svg) {
+  const k = Math.min(1.9, Math.max(1, 640 / Math.max(1, svg.clientWidth || 640)));
+  const fs = 11.5 * k;
+  svg.querySelectorAll(".axis text").forEach(x => { x.style.fontSize = 11 * k + "px"; });
+  const boxes = [...svg.querySelectorAll("circle.mk")].map(c => {
+    const x = +c.getAttribute("cx"), y = +c.getAttribute("cy"), r = +c.getAttribute("r");
+    return [x - r, y - r, x + r, y + r];
+  });
+  const hit = b => boxes.some(o => b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]);
+  const labels = [...svg.querySelectorAll("text.lbl[data-px]")].sort((a, b) => a.dataset.py - b.dataset.py);
+  for (const t of labels) {
+    t.style.fontSize = fs + "px";
+    const px = +t.dataset.px, py = +t.dataset.py, r = +t.dataset.r;
+    const w = t.getComputedTextLength(), h = fs;
+    const cands = [[px + r + 4, py + h * 0.35, "start"], [px - r - 4, py + h * 0.35, "end"],
+                   [px, py - r - 4, "middle"], [px, py + r + h, "middle"]];
+    // farther spots, connected by a leader line
+    for (const d of [1, 2, 3, 4, 5]) for (const s of [-1, 1]) {
+      cands.push([px + r + 10, py + h * 0.35 + s * d * h * 1.1, "start", true]);
+      cands.push([px - r - 10, py + h * 0.35 + s * d * h * 1.1, "end", true]);
+    }
+    let chosen = null;
+    for (const [x, y, a, lead] of cands) {
+      const x0 = a === "start" ? x : a === "end" ? x - w : x - w / 2;
+      const b = [x0 - 1, y - h * 0.85, x0 + w + 1, y + h * 0.25];
+      if (b[0] < X0 || b[2] > X1 || b[1] < Y0) continue;
+      if (b[3] > Y1) continue;
+      if (!hit(b)) { chosen = [x, y, a, b, lead]; break; }
+    }
+    if (!chosen) { const [x, y, a] = cands[0]; chosen = [x, y, a, [x, y - h, x + w, y], false]; }
+    t.setAttribute("x", chosen[0]); t.setAttribute("y", chosen[1]); t.setAttribute("text-anchor", chosen[2]);
+    t.parentNode.querySelector("line.lead")?.remove();
+    if (chosen[4]) {
+      const lx = chosen[2] === "start" ? chosen[0] - 2 : chosen[0] + 2;
+      t.parentNode.insertBefore(el("line", { class: "lead", x1: px, y1: py, x2: lx, y2: chosen[1] - h * 0.35,
+        stroke: "var(--muted)", "stroke-width": 0.8 }), t);
+    }
+    boxes.push(chosen[3]);
+  }
+}
+
+function addPoint(parent, x, y, r, color, label, key, onClick, selected = false, pq = null) {
+  const [cx, cy] = clampXY(x, y);
+  const g = el("g", { class: "pt", tabindex: 0, role: "button", "data-key": key, "aria-label": label || key }, parent);
+  el("title", {}, g).textContent = (label || key) + (pq ? ` · periodicity quartile ${pq} of 4` : "");
+  if (selected) el("circle", { cx: sx(cx), cy: sy(cy), r: r + 4, fill: "none", stroke: "var(--fg)", "stroke-width": 2 }, g);
+  el("circle", { class: "mk", cx: sx(cx), cy: sy(cy), r, fill: color, stroke: "var(--surface)", "stroke-width": 1.5 }, g);
+  if (label) {
+    const t = el("text", { class: "lbl", "data-px": sx(cx), "data-py": sy(cy), "data-r": r }, g);
+    t.textContent = label;
+  }
+  g.addEventListener("click", onClick);
+  g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(); } });
+  g.addEventListener("mouseenter", () => hl(key, true));
+  g.addEventListener("mouseleave", () => hl(key, false));
+}
+
+function hl(key, on) {
+  document.querySelectorAll(`[data-key="${CSS.escape(key)}"]`).forEach(n => n.classList.toggle("hl", on));
+}
+
+function drawLegend() {
+  const L = $("legend");
+  const sizes = PQ_R.map(r => `<svg width="${2 * r + 2}" height="${2 * r + 2}" aria-hidden="true"><circle cx="${r + 1}" cy="${r + 1}" r="${r}" fill="var(--dot)"/></svg>`).join("");
+  L.innerHTML = state.type
+    ? `<span>Small dots: every recording of this song type. Large dots: recordings you can open. Cross: song-type median.</span>`
+    : `<span class="sizes">${sizes}</span><span><b>Point size = periodicity</b> (quartile, low → high). It does not show the number of recordings; those are in the list.</span>`;
+}
+
+function drawCrumbs() {
+  const C = $("crumbs");
+  const parts = [];
+  parts.push(state.cat ? `<button data-go="root">All categories</button>` : `<span class="here">All categories</span>`);
+  if (state.cat) {
+    parts.push(`<span class="sep">/</span>`);
+    parts.push(state.type ? `<button data-go="cat">${esc(catOf(state.cat).name)}</button>` : `<span class="here">${esc(catOf(state.cat).name)}</span>`);
+  }
+  if (state.type) parts.push(`<span class="sep">/</span><span class="here">${esc(typeOf(state.type).name)}</span>`);
+  C.innerHTML = parts.join(" ");
+  C.querySelectorAll("button").forEach(b => b.addEventListener("click", () => b.dataset.go === "root" ? go(null, null) : go(state.cat, null)));
+}
+
+function drawSide() {
+  const S = $("side");
+  let html = "";
+  if (!state.cat) {
+    html = `<h3>Function categories</h3><p class="hint">Ten categories, each the median of its recordings. Numbers are recordings. Choose a category to see its song types.</p><ul class="items">` +
+      M.categories.map(c => item(`cat:${c.key}`, c.color, c.name, null, c.n.toLocaleString())).join("") + `</ul>`;
+  } else if (!state.type) {
+    const c = catOf(state.cat);
+    const ts = M.types.filter(t => t.cat === state.cat);
+    html = `<h3>${esc(c.name)}: song types</h3><p class="hint">Song types are the editors' names for the use of a song, so one type can contain different melodies. Choose a type to see its recordings.</p><ul class="items">` +
+      ts.map(t => item(`type:${t.key}`, c.color, t.name, t.key, t.n.toLocaleString())).join("") + `</ul>`;
+  } else {
+    const t = typeOf(state.type), c = catOf(state.cat);
+    const ids = featuredByType.get(state.type) || [];
+    html = `<h3>${esc(t.name)} · ${esc(t.key)}</h3><p class="hint">${t.n.toLocaleString()} recordings in the map. Open one of the highlighted recordings below or on the map.</p><ul class="items">` +
+      ids.map(id => {
+        const f = featuredIdx.get(id);
+        return item(`song:${id}`, c.color, f.title, `${f.place} · phrase index ${fmt(f.x)}`, "", id === state.song);
+      }).join("") + `</ul>`;
+  }
+  S.innerHTML = html;
+  S.querySelectorAll("button[data-key]").forEach(b => {
+    const k = b.dataset.key;
+    b.addEventListener("mouseenter", () => hl(k, true));
+    b.addEventListener("mouseleave", () => hl(k, false));
+    b.addEventListener("click", () => {
+      const [kind, v] = [k.slice(0, k.indexOf(":")), k.slice(k.indexOf(":") + 1)];
+      if (kind === "cat") go(v, null);
+      else if (kind === "type") go(state.cat, v);
+      else openSong(v, true);
+    });
+  });
+}
+
+function item(key, color, name, sub, n, current = false) {
+  return `<li><button data-key="${esc(key)}"${current ? ' aria-current="true"' : ""}><span class="sw" style="background:${color}"></span>` +
+    `<span class="nm">${esc(name)}${sub ? `<small>${esc(sub)}</small>` : ""}</span>` +
+    `<span class="n num">${esc(n)}</span></button></li>`;
+}
+
+function go(cat, type) {
+  state.cat = cat; state.type = type;
+  drawMap(); drawLegend(); drawCrumbs(); drawSide();
+  writeHash();
+}
+
+// Shareable link: #<category>/<song type>/<recording id>, e.g. #agricultural/보리타작소리/sangju-0603
+function writeHash() {
+  const parts = [state.cat, state.type, state.song && state.type ? state.song : null].filter(Boolean).map(encodeURIComponent);
+  history.replaceState(null, "", parts.length ? "#" + parts.join("/") : location.pathname + location.search);
+}
+function readHash() {
+  const [cat, type, song] = location.hash.slice(1).split("/").map(decodeURIComponent);
+  const okCat = M.categories.some(c => c.key === cat) ? cat : null;
+  const okType = okCat && M.types.some(t => t.key === type && t.cat === okCat) ? type : null;
+  const okSong = okType && (featuredByType.get(okType) || []).includes(song) ? song : null;
+  return [okCat, okType, okSong];
+}
+
+// ---------------- song viewer ----------------
+const audio = new Audio();
+audio.preload = "none";
+let page0 = 0;            // detail window start (s)
+let WIN = 30;             // detail window length (s); shorter on narrow screens
+const setWin = () => { WIN = window.innerWidth < 640 ? 12 : 30; };
+setWin();
+let raf = 0;
+let pendingSeek = null;
+audio.addEventListener("loadedmetadata", () => { if (pendingSeek != null) { audio.currentTime = pendingSeek; pendingSeek = null; } });
+
+const absURL = u => new URL(u, location.href).href;   // audio.src is always absolute
+
+function placeOf(s) {
+  const k = s.region && s.region.korean_info;
+  if (k) { const p = k.split("_"); return p.slice(1, -1).join(" "); }
+  return [s.region?.province, s.region?.place].filter(Boolean).join(" ");
+}
+
+async function loadSong(id) {
+  if (!songCache.has(id)) songCache.set(id, await getJSON(`data/songs/${encodeURIComponent(id)}.json`));
+  return songCache.get(id);
+}
+
+async function openSong(id, scroll) {
+  state.song = id;
+  writeHash();
+  if (state.type) { drawMap(); drawSide(); }
+  let s;
+  try { s = await loadSong(id); }
+  catch (e) { $("song").innerHTML = `<p class="status err">Could not load data for ${esc(id)} (${esc(e.message)}).</p>`; return; }
+  audio.pause();
+  pendingSeek = null;
+  audio.src = s.audio;
+  page0 = 0;
+  renderSong(s);
+  if (scroll) $("song").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+}
+
+function motifColor(k) {
+  if (k == null) return null;
+  return k < M.motif_colors.length ? M.motif_colors[k] : "#6b7280";
+}
+function motifLetter(k) {
+  if (k == null) return "·";
+  return k < 26 ? String.fromCharCode(65 + k) : String(k + 1);
+}
+
+function renderSong(s) {
+  const c = catOf(s.cat), t = typeOf(s.type);
+  const m = s.metrics;
+  const badges = [s.fig706 ? `<span class="chip">Example in the article</span>` : "", s.annotated ? `<span class="chip">Boundaries also annotated by hand</span>` : ""].join("");
+  $("song").innerHTML = `
+    <div class="song-head">
+      <div class="chips"><span class="chip cat" style="background:${c.color}">${esc(c.name)}</span><span class="chip">${esc(t.name)}</span>${badges}</div>
+      <div class="kr">${esc(s.title)}</div>
+      <div class="en">${esc(s.type_en)} · <span class="num">${esc(s.id)}</span></div>
+    </div>
+    <dl class="facts">
+      <div><dt>Place</dt><dd>${esc(placeOf(s))}</dd></div>
+      <div><dt>Recorded</dt><dd class="num">${esc(s.rec_date)}</dd></div>
+      <div><dt>Singers</dt><dd>${esc(s.singer)}</dd></div>
+      <div><dt>Length</dt><dd class="num">${fmtTime(s.song_length)} · ${s.phrases.length} phrases</dd></div>
+    </dl>
+    <div class="controls">
+      <button class="play" id="play" type="button">Play</button>
+      <span class="num status" id="clock">0:00 / ${fmtTime(s.song_length)}</span>
+      <span class="seg" role="group" aria-label="Clustering grade">${GRADES.map(([g, n]) => `<button type="button" data-g="${g}" aria-pressed="${g === state.grade}">${n}</button>`).join("")}</span>
+      <a href="${esc(s.page)}" target="_blank" rel="noopener">Open in the MBC archive</a>
+      <span class="status" id="astatus"></span>
+    </div>
+    <div class="tracks">
+      <div class="trackcap"><span>Whole recording: one box per phrase, coloured by motif. Click to jump.</span></div>
+      <canvas id="ov" height="34" aria-label="Phrase overview"></canvas>
+      <div class="trackcap"><span id="wincap"></span><span class="pager"><button type="button" id="prev">◀ Earlier</button><button type="button" id="next">Later ▶</button></span></div>
+      <canvas id="det" height="244" aria-label="Pitch contour and phrases"></canvas>
+    </div>
+    <div class="metrics">
+      <div><h3>Phrase organisation (L1)</h3><table>
+        <tr><td>Mean phrase duration <span class="sub">(first 60 s)</span></td><td class="num">${fmt(m.dur_mean_60)} s</td></tr>
+        <tr><td>Duration entropy <span class="sub">(scale-removed)</span></td><td class="num">${fmt(m.dur_entropy_norm_60)}</td></tr>
+      </table></div>
+      <div><h3>Motif repetition (L2, medium)</h3><table>
+        <tr><td>Motif Spread</td><td class="num">${fmt(m.motif_spread_medium)}</td></tr>
+        <tr><td>Periodic coverage</td><td class="num">${fmt(m.periodic_coverage_medium)}</td></tr>
+        <tr><td>Phase alignment (FOLD)</td><td class="num">${fmt(m.periodic_fold_local_medium)}</td></tr>
+        <tr><td>Texture periodicity (AC)</td><td class="num">${fmt(m.periodicity_ac_short)}</td></tr>
+      </table></div>
+      <div><h3>Map position</h3><table>
+        <tr><td>Phrase index <span class="sub">(type median ${fmt(t.x)})</span></td><td class="num">${fmt(m.x)}</td></tr>
+        <tr><td>Return index <span class="sub">(type median ${fmt(t.y)})</span></td><td class="num">${fmt(m.y)}</td></tr>
+        <tr><td>Periodicity index</td><td class="num">${fmt(m.periodicity_index)}</td></tr>
+      </table></div>
+    </div>
+    ${s.lyrics_published ? `<details><summary>Published lyrics and notes (MBC archive)</summary><pre>${esc(s.lyrics_published)}</pre></details>` : ""}
+  `;
+  $("play").addEventListener("click", () => {
+    if (audio.paused) {
+      $("astatus").textContent = "Loading audio…";
+      $("astatus").className = "status";
+      audio.play().catch(err => audioError(s, err.message));
+    } else audio.pause();
+  });
+  document.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => {
+    state.grade = b.dataset.g;
+    document.querySelectorAll(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    drawTracks(s);
+  }));
+  $("prev").addEventListener("click", () => { page0 = Math.max(0, page0 - WIN); drawTracks(s); });
+  $("next").addEventListener("click", () => { if (page0 + WIN < s.song_length) page0 += WIN; drawTracks(s); });
+  $("ov").addEventListener("click", e => seekFromCanvas(e, s, 0, s.song_length));
+  $("det").addEventListener("click", e => seekFromCanvas(e, s, page0, page0 + WIN));
+  drawTracks(s);
+}
+
+function audioError(s, msg) {
+  const a = $("astatus");
+  if (!a) return;
+  a.className = "status err";
+  a.innerHTML = `Audio did not load (${esc(msg || "network error")}). <a href="${esc(s.page)}" target="_blank" rel="noopener">Listen on urisori.co.kr</a>.`;
+}
+
+function seekFromCanvas(e, s, t0, t1) {
+  const r = e.currentTarget.getBoundingClientRect();
+  const t = t0 + (e.clientX - r.left) / r.width * (t1 - t0);
+  page0 = Math.floor(t / WIN) * WIN;
+  // with preload="none" a seek before metadata is ignored, so keep it and apply it once metadata arrives
+  if (audio.readyState >= 1) audio.currentTime = t; else pendingSeek = t;
+  if (audio.paused) drawTracks(s, t);
+}
+
+function fmtTime(sec) {
+  if (sec == null || !isFinite(sec)) return "–";
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function fitCanvas(cv) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!cv.dataset.h) cv.dataset.h = cv.getAttribute("height");   // CSS height; the attribute becomes the backing size
+  const w = cv.clientWidth, h = Number(cv.dataset.h);
+  cv.style.height = h + "px";
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, w, h];
+}
+
+function drawTracks(s, tNow) {
+  const ov = $("ov"), det = $("det");
+  if (!ov || !det) return;
+  const now = tNow ?? (pendingSeek ?? (audio.src === absURL(s.audio) ? audio.currentTime : 0));
+  const lab = s.motifs[state.grade];
+  const single = css("--singleton"), singleTxt = css("--singleton-txt"), fg = css("--fg"), muted = css("--muted"), line = css("--line");
+  const L = s.song_length;
+
+  // overview
+  let [c, w, h] = fitCanvas(ov);
+  c.clearRect(0, 0, w, h);
+  s.phrases.forEach(([a, b], i) => {
+    c.fillStyle = motifColor(lab[i]) || single;
+    c.fillRect(a / L * w, 4, Math.max(1, (b - a) / L * w - 0.5), h - 8);
+  });
+  c.strokeStyle = fg; c.lineWidth = 1;
+  c.strokeRect(page0 / L * w + 0.5, 1.5, Math.min(WIN, L - page0) / L * w - 1, h - 3);
+  c.fillStyle = fg; c.fillRect(now / L * w - 1, 0, 2, h);
+
+  // detail window
+  [c, w, h] = fitCanvas(det);
+  c.clearRect(0, 0, w, h);
+  const t0 = page0, t1 = page0 + WIN;
+  const tx = t => (t - t0) / WIN * w;
+  const fTop = 6, fBot = 150, bTop = 160, bBot = 192;
+  // pitch range from voiced values in the whole song
+  const vals = s.f0.filter(v => v != null).sort((a, b) => a - b);
+  const lo = vals.length ? vals[Math.floor(vals.length * 0.02)] - 1 : 40, hi = vals.length ? vals[Math.floor(vals.length * 0.98)] + 1 : 80;
+  const fy = v => fBot - (v - lo) / (hi - lo) * (fBot - fTop);
+  // semitone grid every octave (MIDI multiples of 12)
+  c.strokeStyle = line; c.lineWidth = 1; c.fillStyle = muted; c.font = "11px " + css("--mono");
+  for (let mi = Math.ceil(lo / 12) * 12; mi <= hi; mi += 12) { c.beginPath(); c.moveTo(0, fy(mi)); c.lineTo(w, fy(mi)); c.stroke(); c.fillText(`C${mi / 12 - 1}`, 4, fy(mi) - 3); }
+  // phrase shading behind contour
+  s.phrases.forEach(([a, b], i) => {
+    if (b < t0 || a > t1) return;
+    const col = motifColor(lab[i]);
+    c.fillStyle = col ? col + "22" : "transparent";
+    c.fillRect(tx(a), fTop, tx(b) - tx(a), fBot - fTop);
+  });
+  // contour
+  c.strokeStyle = css("--f0"); c.lineWidth = 1.6; c.beginPath();
+  let pen = false;
+  const i0 = Math.max(0, Math.floor(t0 * s.f0_hz)), i1 = Math.min(s.f0.length, Math.ceil(t1 * s.f0_hz));
+  for (let i = i0; i < i1; i++) {
+    const v = s.f0[i];
+    if (v == null || v < lo || v > hi) { pen = false; continue; }
+    const X = tx(i / s.f0_hz), Y = fy(v);
+    if (pen) c.lineTo(X, Y); else c.moveTo(X, Y);
+    pen = true;
+  }
+  c.stroke();
+  // phrase boxes with letters and ASR lyric
+  c.textBaseline = "middle"; c.textAlign = "center";
+  s.phrases.forEach(([a, b], i) => {
+    if (b < t0 || a > t1) return;
+    const x0 = tx(Math.max(a, t0)), x1 = tx(Math.min(b, t1));
+    const col = motifColor(lab[i]);
+    c.fillStyle = col || single;
+    c.fillRect(x0 + 0.5, bTop, Math.max(1, x1 - x0 - 1), bBot - bTop);
+    const cx = (x0 + x1) / 2;
+    if (x1 - x0 > 12) {
+      c.fillStyle = col ? "#ffffff" : singleTxt; c.font = "600 13px " + css("--mono");
+      c.fillText(motifLetter(lab[i]), cx, (bTop + bBot) / 2);
+    }
+    const lyr = s.phrase_lyrics[i];
+    if (lyr) {
+      c.fillStyle = (now >= a && now < b) ? fg : muted; c.font = "12px " + css("--body");
+      const maxW = x1 - x0 - 2;
+      let txt = lyr;
+      while (txt.length > 1 && c.measureText(txt).width > maxW) txt = txt.slice(0, -1);
+      if (c.measureText(txt).width <= maxW && maxW > 14) c.fillText(txt === lyr ? txt : txt.slice(0, -1) + "…", cx, bBot + 14);
+    }
+  });
+  // time ticks
+  c.fillStyle = muted; c.font = "11px " + css("--mono"); c.textAlign = "left";
+  c.textBaseline = "alphabetic";
+  const step = WIN <= 12 ? 2 : 5;
+  for (let t = Math.ceil(t0 / step) * step; t < t1; t += step) { c.fillRect(tx(t), h - 16, 1, 6); c.fillText(fmtTime(t), tx(t) + 3, h - 4); }
+  // playhead
+  if (now >= t0 && now <= t1) { c.fillStyle = fg; c.fillRect(tx(now) - 1, 0, 2, bBot); }
+  const cap = $("wincap");
+  if (cap) cap.textContent = `${fmtTime(t0)}–${fmtTime(Math.min(t1, L))}: pitch contour (CREPE, voiced frames) over phrases; automatic lyric transcript below each phrase`;
+  const clk = $("clock");
+  if (clk) clk.textContent = `${fmtTime(now)} / ${fmtTime(L)}`;
+}
+
+function tick() {
+  const s = songCache.get(state.song);
+  if (s && !audio.paused) {
+    const t = audio.currentTime;
+    if (t < page0 || t >= page0 + WIN) page0 = Math.floor(t / WIN) * WIN;
+    drawTracks(s);
+  }
+  raf = requestAnimationFrame(tick);
+}
+
+audio.addEventListener("playing", () => { const p = $("play"); if (p) p.textContent = "Pause"; const a = $("astatus"); if (a && !a.classList.contains("err")) a.textContent = ""; });
+audio.addEventListener("pause", () => { const p = $("play"); if (p) p.textContent = "Play"; const s = songCache.get(state.song); if (s) drawTracks(s); });
+audio.addEventListener("error", () => { const s = songCache.get(state.song); if (s) audioError(s, audio.error ? `code ${audio.error.code}` : ""); });
+window.addEventListener("resize", () => {
+  setWin();
+  const s = songCache.get(state.song);
+  if (s) { page0 = Math.floor((audio.src === absURL(s.audio) ? audio.currentTime : page0) / WIN) * WIN; drawTracks(s); }
+  if (M) placeLabels($("map"));
+});
+
+// ---------------- boot ----------------
+(async function boot() {
+  try {
+    M = await getJSON("data/map.json");
+  } catch (e) {
+    $("side").innerHTML = `<p class="status err">Could not load the map data (${esc(e.message)}). Serve this folder over HTTP; opening the file directly blocks data loading.</p>`;
+    return;
+  }
+  $("nsongs").textContent = M.n_songs.toLocaleString();
+  const idx = await getJSON("data/featured_index.json");
+  for (const f of idx) {
+    featuredIdx.set(f.id, f);
+    if (!featuredByType.has(f.type)) featuredByType.set(f.type, []);
+    featuredByType.get(f.type).push(f.id);
+  }
+  for (const ids of featuredByType.values()) ids.sort((a, b) => featuredIdx.get(a).x - featuredIdx.get(b).x);
+  const [hc, ht, hs] = readHash();
+  state.song = hs || M.default_song;
+  go(hc, ht);
+  await openSong(state.song, !!hs);
+  raf = requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
