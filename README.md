@@ -2,7 +2,7 @@
 
 Interactive companion page for a study of phrase organisation and motif repetition in Korean folk song field recordings from the MBC *Korean Folk Song Anthology* (한국민요대전).
 
-**Live page:** https://danbinaerinhan.github.io/korean-folk-form-map/
+**Live page:** https://www.danbinaerin.com/korean-folk-form-map/
 
 The page has three levels, each on the same two axes:
 
@@ -10,7 +10,7 @@ The page has three levels, each on the same two axes:
 2. Song types within a category.
 3. Individual recordings of a song type.
 
-All 7,357 recordings behind the map appear as grey dots. For 112 highlighted recordings, the page shows:
+All 7,333 recordings behind the map appear as grey dots. For 112 highlighted recordings, the page shows:
 - automatic phrase boundaries
 - motif labels at three clustering grades
 - the pitch contour
