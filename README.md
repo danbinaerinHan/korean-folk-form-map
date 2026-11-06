@@ -20,8 +20,9 @@ All 7,333 recordings behind the map appear as grey dots. For 112 highlighted rec
 You can also listen to these 112 recordings on the page.
 
 - **Phrase index (horizontal):** higher means shorter and more even phrases. It combines mean phrase duration and duration entropy.
-- **Return index (vertical):** combines Motif Spread and periodic coverage.
-- **Point size:** quartile of the periodicity index, which combines texture periodicity (AC) and phase alignment (FOLD). Point size does not show the number of recordings.
+- **Return index (vertical):** combines recurrence proportion and periodic coverage.
+- **Point size:** quartile of the periodicity index, which combines texture periodicity and phase alignment. Point size does not show the number of recordings.
+- **Point shape:** solo/group arrangement. Circles have a median group proportion of 0.1 or above (with group singing), squares below it (solo). Highlighted recordings use their own values for shape and size.
 - **Highlighted recordings:** three per song type. Each type's phrase-index range is split into thirds, and the recording with the most reliable automatic segmentation is taken from each third. The four example recordings shown in the article are added to these.
 
 Phrase boundaries and per-phrase lyrics are automatic outputs and have not been corrected.
